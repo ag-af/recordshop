@@ -92,7 +92,12 @@ public class AlbumController {
         //Get: check the health of the API (200)
         @GetMapping("/health")
         public ResponseEntity<String> checkHealth() {
-            return new ResponseEntity<>("The Record Shop API is up and running", HttpStatus.OK);
+        boolean isHealthy = albumService.isHealthy();
+            if (isHealthy) {
+                return new ResponseEntity<>("The Record Shop API is up and running", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("The Record Shop API is down", HttpStatus.SERVICE_UNAVAILABLE);
+            }
         }
 
         //Post: add new albums into the database (201, 400)
@@ -112,12 +117,15 @@ public class AlbumController {
         //Delete: delete albums from the database (204, 404)
         @DeleteMapping("/{id}")
         public ResponseEntity<Void> deleteAlbum(@PathVariable Long id) {
-            Optional<Album> album = albumService.findAlbumById(id);
-            if (album.isPresent()) {
-                albumService.deleteAlbum(id);
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
+        albumService.deleteAlbum(id);
+        return ResponseEntity.noContent().build();
         }
+//            Optional<Album> album = albumService.findAlbumById(id);
+//            if (album.isPresent()) {
+//                albumService.deleteAlbum(id);
+//                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+//            } else {
+//                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//            }
+//        }
     }

@@ -46,7 +46,9 @@ public class AlbumServiceImpl implements AlbumService{
 
     @Override
     public void deleteAlbum(Long id) {
-        albumRepository.deleteById(id);
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Album not found"));
+        albumRepository.delete(album);
     }
 
     @Override
@@ -67,5 +69,10 @@ public class AlbumServiceImpl implements AlbumService{
     @Override
     public List<Album> findAlbumsByYear(int year) {
         return albumRepository.findByReleaseYear(year);
+    }
+
+    @Override
+    public boolean isHealthy() {
+        return true;
     }
 }

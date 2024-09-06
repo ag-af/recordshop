@@ -9,5 +9,4 @@ class RecordShopApiMiniProjectApplicationTests {
 	@Test
 	void contextLoads() {
 	}
-
 }

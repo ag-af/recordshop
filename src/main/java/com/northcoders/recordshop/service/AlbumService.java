@@ -22,4 +22,6 @@ public interface AlbumService {
     List<Album> findAlbumsByGenre(String genre);
 
     List<Album> findAlbumsByYear(int year);
+
+    boolean isHealthy();
 }
