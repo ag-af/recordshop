@@ -2,8 +2,10 @@ package com.northcoders.recordshop.service;
 
 import com.northcoders.recordshop.model.Album;
 import com.northcoders.recordshop.repository.AlbumRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +32,16 @@ public class AlbumServiceImpl implements AlbumService{
     }
 
     @Override
-    public Album updateAlbum(Album album) {
-        return albumRepository.save(album);
+    public Album updateAlbum(Long id, Album updatedAlbum) {
+        return albumRepository.findById(id).map(album -> {
+            album.setTitle(updatedAlbum.getTitle());
+            album.setArtist(updatedAlbum.getArtist());
+            album.setGenre(updatedAlbum.getGenre());
+            album.setReleaseYear(updatedAlbum.getReleaseYear());
+            album.setPrice(updatedAlbum.getPrice());
+            album.setStock(updatedAlbum.getStock());
+            return albumRepository.save(album);
+        }).orElseThrow(() -> new EntityNotFoundException("Album not found"));
     }
 
     @Override

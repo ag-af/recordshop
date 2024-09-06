@@ -4,12 +4,14 @@ package com.northcoders.recordshop.controller;
 import com.northcoders.recordshop.model.Album;
 import com.northcoders.recordshop.model.Genre;
 import com.northcoders.recordshop.service.AlbumService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.webjars.NotFoundException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -102,26 +104,9 @@ public class AlbumController {
 
         //Put: update album details(change price, stock) (200, 404)
         @PutMapping("/{id}")
-        public ResponseEntity<Album> updateAlbum(@PathVariable Long id, @RequestBody Album albumDetails) {
-            //service layer to retrieve album by id, check if the album exists, then get the album, otherwise return a 404
-            //Update all fields with new data
-            //updatedAlbum save the updated album(save handle inserting and updating)
-            // If album was updated return the album and 200
-            // If album does not exist 400
-            Optional<Album> updatingAlbum = albumService.findAlbumById(id);
-            if (updatingAlbum.isPresent()) {
-                Album albumUpdate = updatingAlbum.get();
-                albumUpdate.setTitle(albumDetails.getTitle());
-                albumUpdate.setArtist(albumDetails.getArtist());
-                albumUpdate.setGenre(albumDetails.getGenre());
-                albumUpdate.setReleaseYear(albumDetails.getReleaseYear());
-                albumUpdate.setPrice(albumDetails.getPrice());
-                albumUpdate.setStock(albumUpdate.getStock());
-                Album updatedAlbum = albumService.updateAlbum(albumUpdate);
-                return new ResponseEntity<>(updatedAlbum, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
+        public ResponseEntity<Album> updateAlbum(@PathVariable(value = "id") Long id, @Valid @RequestBody Album album) {
+            Album updatedAlbum = albumService.updateAlbum(id, album);
+            return ResponseEntity.ok(updatedAlbum);
         }
 
         //Delete: delete albums from the database (204, 404)

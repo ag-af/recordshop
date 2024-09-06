@@ -5,10 +5,12 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.northcoders.recordshop.model.Album;
 import com.northcoders.recordshop.model.Genre;
 import com.northcoders.recordshop.service.AlbumService;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,7 +22,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.webjars.NotFoundException;
 
+import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -245,9 +249,48 @@ class AlbumControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-
+    //200
     @Test
-    void updateAlbum() {
+    void updateAlbum() throws Exception {
+        // Original album data
+        Album existingAlbum = new Album("Title", "Artist", Genre.HIPHOP, 1987, new BigDecimal("12.90"), 23);
+        // Updated album data
+        Album updatedAlbum = new Album("New Title", "New Artist", Genre.JAZZ, 2000, new BigDecimal("7.99"), 5);
+        // Mock the service layer to return the updated album when the update is called
+        Mockito.when(albumService.updateAlbum(Mockito.eq(1L), Mockito.any(Album.class))).thenReturn(updatedAlbum);
+        // Convert the updatedAlbum object to JSON
+        String updatedAlbumJson = objectMapper.writeValueAsString(updatedAlbum);
+        // Perform the PUT request and verify changes
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/albums/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedAlbumJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("New Title"))
+                .andExpect(jsonPath("$.artist").value("New Artist"))
+                .andExpect(jsonPath("$.genre").value("JAZZ"))
+                .andExpect(jsonPath("$.releaseYear").value(2000))
+                .andExpect(jsonPath("$.price").value(7.99))
+                .andExpect(jsonPath("$.stock").value(5));
+    }
+
+    //404
+    @Test
+    public void updateNonExistentAlbum() throws Exception {
+        //Give an invalid Id
+        Long invalidAlbumId = 1000L;
+        //Mock the service layer to throw and exception
+        Mockito.when(albumService.updateAlbum(Mockito.eq(invalidAlbumId), Mockito.any(Album.class)))
+                .thenThrow(new EntityNotFoundException("Album not found"));
+        //Create an updated album
+        Album updatedAlbum = new Album("Updated Title", "Updated Artist", Genre.ROCK, 1888, new BigDecimal(7.99), 29);
+        //Convert the album to JSON
+        String updatedAlbumJSON = objectMapper.writeValueAsString(updatedAlbum);
+        //Put request and expect 404
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/albums/" + invalidAlbumId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedAlbumJSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Album not found"));
     }
 
     @Test

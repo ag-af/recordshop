@@ -1,6 +1,7 @@
 package com.northcoders.recordshop.service;
 
 import com.northcoders.recordshop.model.Album;
+import org.webjars.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +11,7 @@ public interface AlbumService {
     Optional<Album> findAlbumById(Long id);
 
     Album saveAlbum(Album album);
-    Album updateAlbum(Album album);
+    Album updateAlbum(Long id, Album album);
 
     void deleteAlbum(Long id);
 
