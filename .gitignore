@@ -34,3 +34,5 @@ build/
 src/main/resources/application.properties
 src/main/resources/application-dev.properties
 application-dev.properties
+application-prod.properties
+*.properties
