@@ -6,7 +6,6 @@ import com.northcoders.recordshop.model.Album;
 import com.northcoders.recordshop.model.Genre;
 import com.northcoders.recordshop.repository.AlbumRepository;
 import com.northcoders.recordshop.service.AlbumService;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import java.math.BigDecimal;
@@ -102,7 +102,7 @@ class AlbumControllerTest {
     //404
     @Test
     void getAlbumIdNotFound() throws Exception {
-        Long albumId = 1L;
+        Long albumId = 1000L;
         when(albumService.findAlbumById(albumId)).thenThrow(new ResourceNotFoundException("Album not found with id: " + albumId));
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/albums/{id}", albumId))
                 .andExpect(status().isNotFound())
@@ -302,19 +302,18 @@ class AlbumControllerTest {
     public void updateNonExistentAlbum() throws Exception {
         //Give an invalid Id
         Long invalidAlbumId = 1000L;
-        //Mock the service layer to throw and exception
-        Mockito.when(albumService.updateAlbum(Mockito.eq(invalidAlbumId), Mockito.any(Album.class)))
-                .thenThrow(new EntityNotFoundException("Album not found"));
         //Create an updated album
-        Album updatedAlbum = new Album("Updated Title", "Updated Artist", Genre.ROCK, 1888, new BigDecimal(7.99), 29);
+        Album updatedAlbum = new Album("Updated Title", "Updated Artist", Genre.ROCK, 1888, new BigDecimal("7.99"), 29);
         //Convert the album to JSON
         String updatedAlbumJSON = objectMapper.writeValueAsString(updatedAlbum);
+        //throw and exception
+                doThrow(new ResourceNotFoundException("Album not found with id: " + invalidAlbumId))
+                        .when(albumService).updateAlbum(invalidAlbumId, updatedAlbum);
         //Put request and expect 404
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/albums/" + invalidAlbumId)
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/albums/{id}", invalidAlbumId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updatedAlbumJSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Album not found"));
+                .andExpect(status().isNotFound());
     }
 
     //204
@@ -331,7 +330,10 @@ class AlbumControllerTest {
 
     @Test
     public void deleteNonExistentAlbum() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/albums/{id}", 1000L))
+        Long nonExistentId = 1000L;
+        doThrow(new ResourceNotFoundException("Album not found with id: " + nonExistentId))
+                .when(albumService).deleteAlbum(nonExistentId);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/albums/{id}", nonExistentId))
                 .andExpect(status().isNotFound());
     }
 //        //Non-existent album ID

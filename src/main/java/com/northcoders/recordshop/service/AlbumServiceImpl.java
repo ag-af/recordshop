@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,7 +55,9 @@ public class AlbumServiceImpl implements AlbumService{
 
     @Override
     public Album updateAlbum(Long id, Album updatedAlbum) {
-        return albumRepository.findById(id).map(album -> {
+        Optional<Album> existingAlbum = albumRepository.findById(id);
+        if (existingAlbum.isPresent()) {
+            Album album = existingAlbum.get();
             album.setTitle(updatedAlbum.getTitle());
             album.setArtist(updatedAlbum.getArtist());
             album.setGenre(updatedAlbum.getGenre());
@@ -62,14 +65,19 @@ public class AlbumServiceImpl implements AlbumService{
             album.setPrice(updatedAlbum.getPrice());
             album.setStock(updatedAlbum.getStock());
             return albumRepository.save(album);
-        }).orElseThrow(() -> new EntityNotFoundException("Album not found"));
+        } else {
+            throw new ResourceNotFoundException("Album not found with id: " + id);
+        }
     }
 
     @Override
     public void deleteAlbum(Long id) {
-        Album album = albumRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Album not found"));
-        albumRepository.delete(album);
+        Optional<Album> album = albumRepository.findById(id);
+        if (album.isPresent()) {
+            albumRepository.delete(album.get());
+        } else {
+               throw new ResourceNotFoundException("Album not found with id: " + id);
+    }
     }
 
     @Override

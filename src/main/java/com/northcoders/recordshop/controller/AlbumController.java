@@ -1,10 +1,12 @@
 package com.northcoders.recordshop.controller;
 
 
+import com.northcoders.recordshop.exception.EntityNotFoundException;
 import com.northcoders.recordshop.exception.InvalidInputException;
 import com.northcoders.recordshop.exception.ResourceNotFoundException;
 import com.northcoders.recordshop.model.Album;
 import com.northcoders.recordshop.model.Genre;
+import com.northcoders.recordshop.repository.AlbumRepository;
 import com.northcoders.recordshop.service.AlbumService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,8 @@ public class AlbumController {
 
     @Autowired
     AlbumService albumService;
+
+    AlbumRepository albumRepository;
 
     //Get: list all albums in stock (200, 204)
     @GetMapping
@@ -100,9 +104,9 @@ public class AlbumController {
     //Post: add new albums into the database (201, 400)
     @PostMapping
     public ResponseEntity<Album> addAlbum(@Valid @RequestBody Album album) {
-       if (album.getTitle() == null || album.getTitle().isEmpty()) {
-           throw new InvalidInputException("Album title is required");
-       }
+//       if (album.getTitle() == null || album.getTitle().isEmpty()) {
+//           throw new InvalidInputException("Album title is required");
+//       }
         Album addedAlbum = albumService.saveAlbum(album);
         return new ResponseEntity<>(addedAlbum, HttpStatus.CREATED);
     }
@@ -110,15 +114,25 @@ public class AlbumController {
     //Put: update album details(change price, stock) (200, 404)
     @PutMapping("/{id}")
     public ResponseEntity<Album> updateAlbum(@PathVariable(value = "id") Long id, @Valid @RequestBody Album album) {
-        Album updatedAlbum = albumService.updateAlbum(id, album);
-        return ResponseEntity.ok(updatedAlbum);
+        try {
+            Album updatedAlbum = albumService.updateAlbum(id, album);
+            return ResponseEntity.ok(updatedAlbum);
+        } catch (ResourceNotFoundException ex) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     //Delete: delete albums from the database (204, 404)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAlbum(@PathVariable Long id) {
-        albumService.deleteAlbum(id);
-        return ResponseEntity.noContent().build();
+        try {
+            albumService.deleteAlbum(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResourceNotFoundException ex) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);  // Return 404 if album not found
+        }
     }
-
 }
+
+
+
