@@ -1,10 +1,7 @@
 package com.northcoders.recordshop.model;
 import jakarta.persistence.*;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
@@ -18,40 +15,40 @@ public class Album {
     Long id;
 
     @Column(nullable = false)
-//    @NotNull(message = "Title is required")
-    @NotBlank(message = "Title is required")
+    @NotEmpty(message = "Title is required")
+//    @NotBlank(message = "Title is required")
     String title;
 
     @Column(nullable = false)
-//    @NotNull(message = "Artist is required")
-    @NotBlank(message = "Artist is required")
+    @NotEmpty(message = "Artist is required")
+//    @NotBlank(message = "Artist is required")
     String artist;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @NotNull(message = "Genre is required")
-//            @NotBlank(message = "Genre is required")
+    @NotEmpty(message = "Genre is required")
+// @NotBlank(message = "Genre is required")
     Genre genre;
 
     @Column(name = "release_year", nullable = false)
-    @NotNull(message = "Release year is required")
+    @NotEmpty(message = "Release year is required")
 //            @NotBlank(message = "Release year is required")
-    int releaseYear;
+    Integer releaseYear;
 
 
     @Column(nullable = false)
-    @NotNull(message = "Price is required")
+    @NotEmpty(message = "Price is required")
 //    @NotBlank(message = "Price is required")
     @DecimalMin (value = "0.0", message = "Price must be positive")
     BigDecimal price;
 
     @Column(nullable = false)
-    @NotNull(message = "Stock is required")
+    @NotEmpty(message = "Stock is required")
 //    @NotBlank(message = "Stock is required")
     @Min(value = 0, message = "Stock must be at least 0")
-    int stock;
+    Integer stock;
 
-    public Album(String title, String artist, Genre genre, int releaseYear, BigDecimal price, int stock) {
+    public Album(String title, String artist, Genre genre, Integer releaseYear, BigDecimal price, Integer stock) {
         this.title = title;
         this.artist = artist;
         this.genre = genre;
@@ -94,11 +91,11 @@ public class Album {
         this.genre = genre;
     }
 
-    public int getReleaseYear() {
+    public Integer getReleaseYear() {
         return releaseYear;
     }
 
-    public void setReleaseYear(int releaseYear) {
+    public void setReleaseYear(Integer releaseYear) {
         this.releaseYear = releaseYear;
     }
 
@@ -110,11 +107,11 @@ public class Album {
         this.price = price;
     }
 
-    public int getStock() {
+    public Integer getStock() {
         return stock;
     }
 
-    public void setStock(int stock) {
+    public void setStock(Integer stock) {
         this.stock = stock;
     }
 }

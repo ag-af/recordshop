@@ -12,7 +12,7 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
 
     Optional<Album> findByTitle(String title);
     List<Album> findByArtist(String artist);
-    List<Album> findByReleaseYear(int year);
+    List<Album> findByReleaseYear(Integer year);
     List<Album> findByGenre(String genre);
     /*
     findAll()

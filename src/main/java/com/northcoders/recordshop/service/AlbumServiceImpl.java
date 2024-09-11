@@ -1,11 +1,14 @@
 package com.northcoders.recordshop.service;
 
+import com.northcoders.recordshop.exception.InvalidInputException;
+import com.northcoders.recordshop.exception.ResourceNotFoundException;
 import com.northcoders.recordshop.model.Album;
+import com.northcoders.recordshop.model.Genre;
 import com.northcoders.recordshop.repository.AlbumRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.webjars.NotFoundException;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -23,11 +26,29 @@ public class AlbumServiceImpl implements AlbumService{
 
     @Override
     public Optional<Album> findAlbumById(Long id) {
-        return albumRepository.findById(id);
+        return Optional.ofNullable(albumRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Album not found with id: " + id)));
     }
 
     @Override
     public Album saveAlbum(Album album) {
+        if (album.getTitle() == null || album.getTitle().isEmpty()) {
+            throw new InvalidInputException("Album title cannot be empty");
+        }
+        if (album.getArtist() == null || album.getArtist().isEmpty()){
+            throw new InvalidInputException("Artist cannot be empty");
+        }
+        if (album.getGenre() == null) {
+            throw new InvalidInputException("Genre cannot be empty");
+        }
+        if (album.getReleaseYear() == null) {
+            throw new InvalidInputException("Release year cannot be empty");
+        }
+        if (album.getPrice() == null) {
+            throw  new InvalidInputException("Price cannot be empty");
+        }
+        if (album.getStock() == null) {
+            throw new InvalidInputException("Stock cannot be empty");
+        }
         return albumRepository.save(album);
     }
 
@@ -67,7 +88,7 @@ public class AlbumServiceImpl implements AlbumService{
     }
 
     @Override
-    public List<Album> findAlbumsByYear(int year) {
+    public List<Album> findAlbumsByYear(Integer year) {
         return albumRepository.findByReleaseYear(year);
     }
 
@@ -75,4 +96,9 @@ public class AlbumServiceImpl implements AlbumService{
     public boolean isHealthy() {
         return true;
     }
+
+//    @Override
+//    public List<Album> findAlbumsByGenre(Genre genre) {
+//        return albumRepository.findByGenre(String.valueOf(genre));
+//    }
 }

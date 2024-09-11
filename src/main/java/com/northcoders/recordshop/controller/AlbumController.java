@@ -1,25 +1,22 @@
 package com.northcoders.recordshop.controller;
 
 
+import com.northcoders.recordshop.exception.InvalidInputException;
+import com.northcoders.recordshop.exception.ResourceNotFoundException;
 import com.northcoders.recordshop.model.Album;
 import com.northcoders.recordshop.model.Genre;
 import com.northcoders.recordshop.service.AlbumService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.webjars.NotFoundException;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/albums")
+@RequestMapping("/api/v1/albums")
 public class AlbumController {
 
     @Autowired
@@ -38,9 +35,9 @@ public class AlbumController {
     //Get: details of a specific record, get album by id (200, 404)
     @GetMapping("/{id}")
     public ResponseEntity<Album> getAlbumById(@PathVariable Long id) {
-        Optional<Album> album = albumService.findAlbumById(id);
-        return album.map(alb -> new ResponseEntity<>(alb, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Album album = albumService.findAlbumById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Album not found with id: " + id));
+        return new ResponseEntity<>(album, HttpStatus.OK);
     }
 
     //Get: get album information by album name (200, 404)
@@ -62,70 +59,66 @@ public class AlbumController {
         }
     }
 
-        //Get: list all albums by a given genre (200)
-        @GetMapping("/genre/{genre}")
-        public ResponseEntity<List<Album>> getAlbumByGenre(@PathVariable("genre") String genre) {
-            Genre genreEnum;
-            try {
-                genreEnum = Genre.valueOf(genre.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-            List<Album> albums = albumService.findAlbumsByGenre(String.valueOf(genreEnum));
-            if (albums.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            } else {
-                return new ResponseEntity<>(albums, HttpStatus.OK);
-            }
+    //Get: list all albums by a given genre (200)
+    @GetMapping("/genre/{genre}")
+    public ResponseEntity<List<Album>> getAlbumByGenre(@PathVariable("genre") String genre) {
+        Genre genreEnum;
+        try {
+            genreEnum = Genre.valueOf(genre.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-
-        //Get: list all albums by a given release year (200)
-        @GetMapping("/year/{year}")
-        public ResponseEntity<List<Album>> getAlbumByYear(@PathVariable int year) {
-            List<Album> albums = albumService.findAlbumsByYear(year);
-            if (albums.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-            return new ResponseEntity<>(albums,HttpStatus.OK);
+        List<Album> albums = albumService.findAlbumsByGenre(String.valueOf(genreEnum));
+        if (albums.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(albums, HttpStatus.OK);
         }
+    }
 
-        //Get: check the health of the API (200)
-        @GetMapping("/health")
-        public ResponseEntity<String> checkHealth() {
+    //Get: list all albums by a given release year (200)
+    @GetMapping("/year/{year}")
+    public ResponseEntity<List<Album>> getAlbumByYear(@PathVariable int year) {
+        List<Album> albums = albumService.findAlbumsByYear(year);
+        if (albums.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(albums, HttpStatus.OK);
+    }
+
+    //Get: check the health of the API (200)
+    @GetMapping("/health")
+    public ResponseEntity<String> checkHealth() {
         boolean isHealthy = albumService.isHealthy();
-            if (isHealthy) {
-                return new ResponseEntity<>("The Record Shop API is up and running", HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>("The Record Shop API is down", HttpStatus.SERVICE_UNAVAILABLE);
-            }
+        if (isHealthy) {
+            return new ResponseEntity<>("The Record Shop API is up and running", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("The Record Shop API is down", HttpStatus.SERVICE_UNAVAILABLE);
         }
+    }
 
-        //Post: add new albums into the database (201, 400)
-        @PostMapping
-        public ResponseEntity<Album> addAlbum(@Valid @RequestBody Album album) {
-            Album addedAlbum = albumService.saveAlbum(album);
-            return new ResponseEntity<>(addedAlbum, HttpStatus.CREATED);
-        }
+    //Post: add new albums into the database (201, 400)
+    @PostMapping
+    public ResponseEntity<Album> addAlbum(@Valid @RequestBody Album album) {
+       if (album.getTitle() == null || album.getTitle().isEmpty()) {
+           throw new InvalidInputException("Album title is required");
+       }
+        Album addedAlbum = albumService.saveAlbum(album);
+        return new ResponseEntity<>(addedAlbum, HttpStatus.CREATED);
+    }
 
-        //Put: update album details(change price, stock) (200, 404)
-        @PutMapping("/{id}")
-        public ResponseEntity<Album> updateAlbum(@PathVariable(value = "id") Long id, @Valid @RequestBody Album album) {
-            Album updatedAlbum = albumService.updateAlbum(id, album);
-            return ResponseEntity.ok(updatedAlbum);
-        }
+    //Put: update album details(change price, stock) (200, 404)
+    @PutMapping("/{id}")
+    public ResponseEntity<Album> updateAlbum(@PathVariable(value = "id") Long id, @Valid @RequestBody Album album) {
+        Album updatedAlbum = albumService.updateAlbum(id, album);
+        return ResponseEntity.ok(updatedAlbum);
+    }
 
-        //Delete: delete albums from the database (204, 404)
-        @DeleteMapping("/{id}")
-        public ResponseEntity<Void> deleteAlbum(@PathVariable Long id) {
+    //Delete: delete albums from the database (204, 404)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAlbum(@PathVariable Long id) {
         albumService.deleteAlbum(id);
         return ResponseEntity.noContent().build();
-        }
-//            Optional<Album> album = albumService.findAlbumById(id);
-//            if (album.isPresent()) {
-//                albumService.deleteAlbum(id);
-//                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-//            } else {
-//                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//            }
-//        }
     }
+
+}
