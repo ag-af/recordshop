@@ -1,3 +1,6 @@
+![Logo](./images/2.png)
+
+
 # Record Shop API
 
 **Overview** 
